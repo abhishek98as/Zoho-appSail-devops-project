@@ -1,0 +1,7 @@
+{
+	"command": "sh -c \"python3 -m pip install --no-cache-dir -r requirements.txt && python3 -m gunicorn -w 2 -k gthread -t 120 -b 0.0.0.0:$X_ZOHO_CATALYST_LISTEN_PORT main:app\"",
+	"build_path": "./",
+	"stack": "python_3_9",
+	"env_variables": {},
+	"memory": 256
+}

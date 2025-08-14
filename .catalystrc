@@ -1,0 +1,30 @@
+{
+  "defaults": {
+    "project": 1,
+    "env": 1
+  },
+  "actives": {
+    "project": 1,
+    "env": 1
+  },
+  "projects": [
+    {
+      "idx": 1,
+      "id": "6751000000041001",
+      "name": "tesst-knight",
+      "domain": {
+        "id": "50030314031",
+        "name": "tesst-knight-60029031947.development"
+      },
+      "timezone": "Asia/Kolkata",
+      "env": [
+        {
+          "idx": 1,
+          "id": "60029031947",
+          "name": "Development",
+          "type": 3
+        }
+      ]
+    }
+  ]
+}
