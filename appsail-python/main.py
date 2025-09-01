@@ -6,6 +6,7 @@ import requests
 from datetime import datetime, timezone, timedelta
 import functools
 from werkzeug.security import check_password_hash, generate_password_hash
+from zoho_sync_scheduler import ZohoSyncScheduler
 
 # Import Catalyst SDK
 try:
@@ -141,6 +142,10 @@ def store_webhook_data_nosql(webhook_data, table_name, raw_webhook_data=None):
                 'webhook_data_json': json.dumps(webhook_data),
                 'created_time': datetime.now(timezone.utc).isoformat()
             }
+        
+        # Add Updated field for delivered_logs table
+        if table_name == DELIVERED_LOGS_TABLE:
+            record_data['Updated'] = False
         
         if queue_id_column and queue_id_value:
             record_data[queue_id_column] = queue_id_value
@@ -353,6 +358,12 @@ class ZohoAPIManager:
         self.client_id = "1000.09GO95AZNVR8RZ24MU799Y4HVFOIFP"
         self.client_secret = "24d22886c8d171fbb7210453bf3e2644ae4030bbf0"
         self.base_url = "https://creator.zoho.in/api/v2.1/puarora_deloitte3/dashverify/report/WhatsApp_History_Form_Report"
+
+# Initialize Zoho manager globally
+zoho_manager = ZohoAPIManager()
+
+# Initialize scheduler (will be started after app initialization)
+scheduler = None
         
     def get_access_token(self):
         """Get or refresh Zoho access token"""
@@ -786,6 +797,56 @@ def test_queue_lookup():
         app.logger.error(f"Error in test_queue_lookup: {e}")
         return jsonify({"error": str(e)}), 500
 
+# Add scheduler status endpoint
+@app.route('/zoho/scheduler/status', methods=['POST'])
+@require_auth
+def scheduler_status_endpoint():
+    """Get the status of the Zoho sync scheduler"""
+    try:
+        if scheduler:
+            return jsonify(scheduler.get_status())
+        else:
+            return jsonify({"error": "Scheduler not initialized"}), 500
+    except Exception as e:
+        app.logger.error(f"Error getting scheduler status: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/zoho/scheduler/start', methods=['POST'])
+@require_auth
+def scheduler_start_endpoint():
+    """Start the Zoho sync scheduler"""
+    try:
+        if scheduler:
+            scheduler.start()
+            return jsonify({"message": "Scheduler started successfully"})
+        else:
+            return jsonify({"error": "Scheduler not initialized"}), 500
+    except Exception as e:
+        app.logger.error(f"Error starting scheduler: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/zoho/scheduler/stop', methods=['POST'])
+@require_auth
+def scheduler_stop_endpoint():
+    """Stop the Zoho sync scheduler"""
+    try:
+        if scheduler:
+            scheduler.stop()
+            return jsonify({"message": "Scheduler stopped successfully"})
+        else:
+            return jsonify({"error": "Scheduler not initialized"}), 500
+    except Exception as e:
+        app.logger.error(f"Error stopping scheduler: {e}")
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == "__main__":
+    # Initialize the scheduler
+    catalyst_app = get_catalyst_app()
+    scheduler = ZohoSyncScheduler(app, zoho_manager, catalyst_app)
+    
+    # Start the scheduler automatically
+    scheduler.start()
+    app.logger.info("Zoho sync scheduler initialized and started")
+    
     port = int(os.environ.get("X_ZOHO_CATALYST_LISTEN_PORT", "9000"))
     app.run(host="0.0.0.0", port=port, debug=False)
