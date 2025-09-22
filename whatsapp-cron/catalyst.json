@@ -1,0 +1,10 @@
+{
+  "project_id": "6751000000139181",
+  "project_name": "Whatsapp-Cron",
+  "appsail": [
+    {
+      "source": ".",
+      "name": "whatsapp-cron"
+    }
+  ]
+}
